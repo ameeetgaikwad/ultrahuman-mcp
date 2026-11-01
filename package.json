@@ -1,0 +1,27 @@
+{
+  "name": "ultrahuman-mcp",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "stdio": "node src/index.js --stdio",
+    "test": "node --test"
+  },
+  "keywords": [
+    "mcp",
+    "ultrahuman",
+    "ring",
+    "health"
+  ],
+  "license": "MIT",
+  "description": "MCP server to chat with your Ultrahuman Ring data in Claude and other AI apps",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "express": "^5.3.0",
+    "zod": "^4.6.7"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  }
+}
