@@ -11,7 +11,10 @@ const TOKEN_URL = `${API}/api/partners/oauth/token`;
 
 const env = process.env;
 export const SCOPES = env.ULTRAHUMAN_SCOPES || "profile ring_data cgm_data";
-export const TOKEN_FILE = env.TOKEN_FILE || path.resolve("data/tokens.json");
+// Railway sets RAILWAY_VOLUME_MOUNT_PATH when a volume is attached, so the login
+// survives restarts without any extra setup. Elsewhere it goes in ./data.
+export const TOKEN_FILE =
+  env.TOKEN_FILE || path.resolve(env.RAILWAY_VOLUME_MOUNT_PATH || "data", "tokens.json");
 
 export const mode = env.ULTRAHUMAN_API_TOKEN
   ? "token"
@@ -45,7 +48,8 @@ async function saveTokens(data) {
     expires_at: Date.now() + (Number(data.expires_in) || 86400) * 1000,
   };
   await fs.mkdir(path.dirname(TOKEN_FILE), { recursive: true });
-  await fs.writeFile(TOKEN_FILE, JSON.stringify(tokens, null, 2));
+  // Only this user can read the file: it holds the keys to your health data.
+  await fs.writeFile(TOKEN_FILE, JSON.stringify(tokens, null, 2), { mode: 0o600 });
 }
 
 async function requestToken(params) {

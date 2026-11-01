@@ -43,6 +43,9 @@ function datesBetween(start, end) {
   const out = [];
   const d = new Date(`${start}T00:00:00Z`);
   const last = new Date(`${end}T00:00:00Z`);
+  // JS turns "2026-02-30" into March 2 instead of complaining, so check the round trip.
+  const real = (date, str) => !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === str;
+  if (!real(d, start) || !real(last, end)) return null;
   while (d <= last && out.length <= MAX_RANGE_DAYS) {
     out.push(d.toISOString().slice(0, 10));
     d.setUTCDate(d.getUTCDate() + 1);
@@ -72,9 +75,10 @@ export function createServer() {
       annotations: readOnly,
     },
     async ({ date, full_detail }) => {
+      const day = date || today();
       try {
-        const data = await getDailyMetrics(date || today());
-        return reply(full_detail ? data : shrink(data));
+        const data = await getDailyMetrics(day);
+        return reply({ date: day, ...(full_detail ? data : shrink(data)) });
       } catch (err) {
         return fail(err);
       }
@@ -96,6 +100,7 @@ export function createServer() {
     },
     async ({ start_date, end_date }) => {
       const days = datesBetween(start_date, end_date);
+      if (days === null) return fail("That is not a real date. Use YYYY-MM-DD, e.g. 2026-03-01.");
       if (days.length === 0) return fail("start_date must be on or before end_date.");
       if (days.length > MAX_RANGE_DAYS) return fail(`Please ask for at most ${MAX_RANGE_DAYS} days at a time.`);
 

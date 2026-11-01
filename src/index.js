@@ -106,5 +106,8 @@ function startWebServer() {
     console.log(`Ultrahuman MCP running on ${PUBLIC_URL} (${mode} mode)`);
     console.log(`MCP address: ${PUBLIC_URL}/mcp`);
     if (mode === "oauth") console.log(`Connect your ring once: ${PUBLIC_URL}/login?key=<MCP_API_KEY>`);
+    if (mode === "oauth" && env.RAILWAY_ENVIRONMENT && !env.RAILWAY_PUBLIC_DOMAIN && !env.PUBLIC_URL) {
+      console.log("No public address yet. In Railway go to Settings -> Networking -> Generate Domain, then redeploy.");
+    }
   });
 }

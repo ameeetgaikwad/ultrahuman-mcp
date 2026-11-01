@@ -7,7 +7,7 @@ Once it's connected, you can ask things like:
 - "How did I sleep last night?"
 - "Compare my HRV and resting heart rate over the last 7 days."
 - "Was my recovery better on the days I walked more?"
-- "What was my average glucose yesterday?" (if you wear a CGM)
+- "What was my average glucose yesterday?" (if you wear a glucose monitor)
 
 The AI only **reads** your data. Nothing gets changed.
 
@@ -34,16 +34,17 @@ You only need **one** of these.
 
 ### Option B: OAuth app (the [Partner API](https://www.ultrahuman.com/blog/accessing-the-ultrahuman-partnership-api/))
 
-Use this if you already have an Ultrahuman partner app, or want the profile tool.
+"OAuth" is the sign-in-with-Ultrahuman flow: you approve the app once in your browser instead of pasting a token. Use this if you already have an Ultrahuman partner app, or want the profile tool.
 
 1. In the same developer portal, create an OAuth app. Copy its **Client ID** and **Client Secret**.
-2. Set its **Redirect URI** to `https://YOUR-APP.up.railway.app/callback`. You'll get this address in step 2, and it has to match exactly.
+2. Set its **Redirect URI** to `https://YOUR-APP.up.railway.app/callback`. You'll get this address in step 2 below, and it has to match exactly.
 
 ## 2. Put it on Railway
 
 1. Push this repo to your GitHub (or fork it).
-2. On [Railway](https://railway.com): **New Project → Deploy from GitHub repo →** pick this repo.
-3. Open the service, go to **Variables**, and add:
+2. On [Railway](https://railway.com): **New Project → Deploy from GitHub repo →** pick this repo. The first deploy will fail because nothing is set up yet. That's expected.
+3. Open the service and go to **Settings → Networking → Generate Domain**. You'll get something like `https://ultrahuman-mcp-production.up.railway.app`.
+4. Go to **Variables** and add:
 
    | Variable | Value |
    | --- | --- |
@@ -57,12 +58,12 @@ Use this if you already have an Ultrahuman partner app, or want the profile tool
    | --- | --- |
    | `ULTRAHUMAN_CLIENT_ID` | From your OAuth app |
    | `ULTRAHUMAN_CLIENT_SECRET` | From your OAuth app |
-   | `TOKEN_FILE` | `/data/tokens.json` |
 
-   Then add a **Volume** to the service (right-click the service → **Attach Volume**) mounted at `/data`. This keeps you logged in when Railway restarts the app.
+   Then give the service a **Volume** (right-click the service → **Attach Volume**, any mount path such as `/data`). A volume is a small disk that survives restarts, so you stay logged in. The server finds it by itself.
 
-4. Go to **Settings → Networking → Generate Domain**. You'll get something like `https://ultrahuman-mcp-production.up.railway.app`.
-5. Open that address in your browser. You should see `"connected": true` (option A).
+   Railway redeploys after you save the variables.
+
+5. Open your address in your browser. You should see `"connected": true` (option A).
 
 **Option B only:** open `https://YOUR-APP.up.railway.app/login?key=YOUR_MCP_API_KEY` once, sign in to Ultrahuman, and approve. After that, `"connected"` will show `true`. The server keeps itself logged in from then on.
 
@@ -139,7 +140,7 @@ Then add it to Claude Desktop's config file (**Settings → Developer → Edit C
 }
 ```
 
-Restart Claude Desktop and you're done. You don't need `MCP_API_KEY` here because nothing goes on the internet.
+Restart Claude Desktop and you're done. You don't need `MCP_API_KEY` here because nothing goes on the internet. If Claude Desktop says it can't find `node`, replace `"node"` with the full path you get from `which node` (Mac/Linux) or `where node` (Windows).
 
 To run the web version locally instead: copy `.env.example` to `.env`, fill it in, and run `node --env-file=.env src/index.js`.
 
@@ -147,8 +148,8 @@ To run the web version locally instead: copy `.env.example` to `.env`, fill it i
 
 - **"Wrong or missing MCP_API_KEY"**: the key in your AI app doesn't match the `MCP_API_KEY` on Railway.
 - **"Incorrect Personal API Token"**: the Ultrahuman token is wrong or was deleted. Make a new one.
-- **"Not connected to Ultrahuman yet"** (option B): open `/login?key=...` again. If this keeps happening after restarts, check that the volume is mounted at `/data`.
-- **Redirect URI error on the Ultrahuman login page** (option B): the Redirect URI in your OAuth app must be exactly `https://YOUR-APP.up.railway.app/callback`.
+- **"Not connected to Ultrahuman yet"** (option B): open `/login?key=...` again. If this keeps happening after restarts, check that the service has a volume attached.
+- **Redirect URI error on the Ultrahuman login page** (option B): the Redirect URI in your OAuth app must be exactly `https://YOUR-APP.up.railway.app/callback`. Also make sure you generated the Railway domain *before* the last deploy; if not, redeploy once (Deployments → ⋮ → Redeploy).
 - **Empty data for a day**: the ring may not have synced yet. Open the Ultrahuman app to sync.
 
 ## Good to know
